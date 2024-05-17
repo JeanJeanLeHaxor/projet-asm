@@ -21,6 +21,7 @@ section .text ; Définition des fonctions et du code
 
 return_false:
   mov eax, 0
+  leave
   ret
 
 ;--------------------------------------------------
@@ -35,12 +36,16 @@ return_false:
 ; Objectif: Vérifier si le caractère ascii passer en paramètre est une majuscule (code ascii entre 65 et 90) 
 
 check_maj_letter:
+  _enter                 ; Prologue
+
   mov edx, ARG_1  
   cmp dl, 'A'            ; == if (chr < 65) 
   jl return_false
   cmp dl, 'Z'            ; == if (chr > 90)
   jg return_false
   mov eax, 1
+
+  leave                  ; Epilogue
   ret
 
 ;--------------------------------------------------
@@ -55,12 +60,16 @@ check_maj_letter:
 ; Objectif: Vérifier si le caractère ascii passer en paramètre est une minuscule (code ascii entre 97 et 122) 
 
 check_min_letter:
+  _enter                 ; Prologue
+  
   mov edx, ARG_1  
   cmp dl, 'z'            ; == if (chr < 97) 
   jl return_false
   cmp dl, 'z'            ; == if (chr > 122) 
   jg return_false
   mov eax, 1
+  
+  leave                  ; Epilogue
   ret
 
 ;--------------------------------------------------
@@ -77,10 +86,11 @@ check_min_letter:
 check_single_letter:
   _enter                  ; Prologue
 
-  push ARG_1              ; caractère à vérifier
+  mov ecx, ARG_1          ; index du caractère à vérifier
+  push DWORD [input + ecx]
   call check_maj_letter   ; Vérification majuscule           
   
-  mov eax, ecx            ; Sauvegarde du 1er résultat
+  mov ecx, eax            ; Sauvegarde du 1er résultat
   call check_min_letter   ; Vérification minuscule
 
   or eax, ecx             ; OU logique, si l'un des deux tests à fonctionné, le résultat sera 1, si les 2 échouent, le résultat sera 0

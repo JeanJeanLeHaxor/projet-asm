@@ -4,10 +4,9 @@
 ;--------------------------------------------------
 
 %include "output_message.asm" ;
-%include "defined.asm"        ; Contient tous les alias d'appel système et autres pour faciliter la lecture
 %include "error.asm"          ;
 %include "check.asm"
-
+%include "syscall.asm"
 ;--------------------------------------------------
 
 section .bss                  ; Définition des variables en lecture et écriture
@@ -39,8 +38,8 @@ exit_no_error:
 ;
 ; Objectif: Quitter le programme avec erreur via un l'appel système exit, équivalent de exit(1) en C
 
-exit_no_error:                
-  push 0                      ; La valeur de retour 1 indique qu'il n'y a eu une erreur
+exit_error:                
+  push 1                      ; La valeur de retour 1 indique qu'il y a eu une erreur
   call exit
 
 ;--------------------------------------------------
@@ -54,7 +53,7 @@ exit_no_error:
 
 read_password:
 
-  _enter                      ; Prologue
+  _enter                     ; Prologue
 
   ; équivalent de read(0, input, 22) 
   push 22
@@ -103,10 +102,11 @@ check_input:
   _check_input_loop:
     cmp ecx, DWORD [input_len]  ; Tant qu'ecx est inférieur à la longueur de la chaine, la boucle continue
     jge _check_input_end
-    push ecx                    ; L'index actuel est passé en argument
+    push ecx                    ; L'index actuel est passé en argument et est sauvegardé
     call check_single_letter    ; Appel de la fonction vérifiant si un caractère est valide
     cmp eax, 1
     jne _check_input_end        ; Si le caractère testé n'est pas valide, la fonction quitte en renvoyant 0
+    pop ecx                     ; ecx est récupéré
     inc ecx                     ; Le compteur est incrémenté
     jmp _check_input_loop
 
