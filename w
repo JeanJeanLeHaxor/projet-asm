@@ -11,6 +11,7 @@
 
 section .bss                  ; Définition des variables en lecture et écriture
   input: resb 25              ; Entrée de l'utilisteur: 25 caractères alloués
+  reverse_input: resb 22      ; Entrée de l'utilisteur inversée: 22 caractères alloués
   input_len: resd 1           ; Longueur de la chaine entrée par l'utilisateur, sera réutilisé à plusieurs endroits
 
 ;--------------------------------------------------
@@ -157,6 +158,33 @@ _strcmp_end:                      ; Le fonction renvoie la différence entre les
   ret
 
 ;--------------------------------------------------
+; Fonction reverse_input
+;
+; Input: None
+; Output: None
+;
+; Objectif: Inverser la chaine de caractères entrée par l'utilisateur
+
+reverse_input:
+  
+  xor ecx, ecx                    ; Le compteur est initialisé à
+
+  _reverse_input_loop:
+    cmp BYTE [input], 0
+    je _reverse_input_end
+    
+    ; Le caractère actuel est récupéré depuis l'input puis est ajouté dans l'input inversé 
+    mov al, BYTE [reverse_input + ecx]
+    mov BYTE []
+
+    loop _reverse_input_loopn
+  
+
+  mov BYTE [reverse_input], 0     ; Un NULL byte est ajouté à la fin 
+  ret
+
+
+;--------------------------------------------------
 ; Fonction _start
 ;
 ; Input: None
@@ -185,7 +213,7 @@ _start:
     cmp eax, 1
     jne _start_loop                         ; Si la chaine n'est pas valide, la boucle recommence
 
-    push input                      ; La chaine inversée est passée en paramètre
+    push reverse_input                      ; La chaine inversée est passée en paramètre
     call compare_password                   ; Si la chaine est valide, la comparaison est effectuée
     cmp eax, 0
     je _end_prog                            ; Si l'entrée utilisateur correspond au mot de passe, le programme quitte sans erreur

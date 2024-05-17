@@ -11,6 +11,7 @@
 
 section .bss                  ; Définition des variables en lecture et écriture
   input: resb 25              ; Entrée de l'utilisteur: 25 caractères alloués
+  input_reverse: resb 22      ; Entrée de l'utilisteur inversée: 22 caractères alloués
   input_len: resd 1           ; Longueur de la chaine entrée par l'utilisateur, sera réutilisé à plusieurs endroits
 
 ;--------------------------------------------------
@@ -157,6 +158,33 @@ _strcmp_end:                      ; Le fonction renvoie la différence entre les
   ret
 
 ;--------------------------------------------------
+; Fonction reverse_input
+;
+; Input: None
+; Output: None
+;
+; Objectif: Inverser la chaine de caractères entrée par l'utilisateur
+
+reverse_input:
+  
+  mov ecx, DWORD [input_len]            ; Le compteur est initialisé à la longueur de la chaine de caractère
+
+  xor edx, edx                          ; edx est initialisé à 0 pour être utilisé comme 2ème compteur
+
+  _reverse_input_loop:
+
+    ; Le caractère actuel est récupéré depuis l'input puis est ajouté dans l'input inversé 
+    mov al, BYTE [input + ecx - 1]
+    mov BYTE [input_reverse + edx], al
+    
+    inc edx
+    loop _reverse_input_loop            ; Tant que le compteur n'est pas arrivé à 0, la fonction continue
+  
+  mov BYTE [input_reverse + edx], 0     ; Un NULL byte est ajouté à la fin 
+  ret
+
+
+;--------------------------------------------------
 ; Fonction _start
 ;
 ; Input: None
@@ -171,12 +199,12 @@ _start:
   _enter                                    ; Prologue
   
   sub esp, 4
-  mov DWORD [esp], 0                        ; Le compteur d'essai est initialisé dans la stack avec une valeur de 0
+  mov DWORD [ebp - 4], 0                        ; Le compteur d'essai est initialisé dans la stack avec une valeur de 0
 
   _start_loop:
-    inc DWORD [esp]                         ; Le compteur d'essai est incrémenté
+    inc DWORD [ebp - 4]                         ; Le compteur d'essai est incrémenté
     
-    cmp DWORD [esp], 6                      
+    cmp DWORD [ebp - 4], 6                      
     jge _end_fail_prog                      ; Si le mot de passe n'a pas été entré au bout de 5 tentative, le programme quitte sur une erreur
 
     call print_enter_string                 ; Affichage d'un message invitant l'utilisateur à entrer une chaine
@@ -185,7 +213,9 @@ _start:
     cmp eax, 1
     jne _start_loop                         ; Si la chaine n'est pas valide, la boucle recommence
 
-    push input                      ; La chaine inversée est passée en paramètre
+    call reverse_input                      ; L'entrée utilisateur est inversée dans une autre chaine de caractère                 
+
+    push input_reverse                      ; La chaine inversée est passée en paramètre
     call compare_password                   ; Si la chaine est valide, la comparaison est effectuée
     cmp eax, 0
     je _end_prog                            ; Si l'entrée utilisateur correspond au mot de passe, le programme quitte sans erreur
