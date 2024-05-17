@@ -10,7 +10,7 @@
 ;--------------------------------------------------
 
 section .bss                  ; Définition des variables en lecture et écriture
-  input: resb 22              ; Entrée de l'utilisteur: 22 caractères alloués pour les 21 lettres + le retour à la ligne ('\n') TODO à revérifier
+  input: resb 25              ; Entrée de l'utilisteur: 25 caractères alloués 
   input_len: resd 1           ; Longueur de la chaine entrée par l'utilisateur, sera réutilisé à plusieurs endroits
 
 ;--------------------------------------------------
@@ -55,8 +55,8 @@ read_password:
 
   _enter                     ; Prologue
 
-  ; équivalent de read(0, input, 22) 
-  push 22
+  ; équivalent de read(0, input, 25) 
+  push 25
   push input
   push STDIN
   call read
@@ -95,7 +95,7 @@ check_input:
   cmp eax, 1
   jne _check_input_end          ; Si la longueur n'est pas valide, la fonction quitte en renvoyant 0
 
-  ; Initialisation d'edx à 0 pour s'en servir comme compteur et d'edx à 0 pour l'utiliser afin de stocker les caractères
+  ; Initialisation d'ecx à 0 pour s'en servir comme compteur
   xor ecx, ecx
   
   ; La boucle suivante permet d'itérer sur chaque caractère de la chaine entrée par l'utilisateur

@@ -63,7 +63,7 @@ check_min_letter:
   _enter                 ; Prologue
   
   mov edx, ARG_1  
-  cmp dl, 'z'            ; == if (chr < 97) 
+  cmp dl, 'a'            ; == if (chr < 97) 
   jl return_false
   cmp dl, 'z'            ; == if (chr > 122) 
   jg return_false

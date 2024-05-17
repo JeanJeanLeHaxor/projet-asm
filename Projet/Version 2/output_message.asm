@@ -1,12 +1,24 @@
+;--------------------------------------------------
+; output_message.asm
+;
+; Ce fichier centralise les messages qui sont affichés pour l'utilisateur
+; Les messages d'erreurs sont affichés sur STDERR, les autres sur STDOUT
+;
+; Auteur: Louis Deschanel
+;--------------------------------------------------
+
 %include "defined.asm"
 
-section .data
+section .data ; Définition des constantes, chaque string est associée avec sa longueur (Permet d'éviter de calculer la longueur au runtime)
+
   enter_string: db "Entrez le mot de passe: ", 0
   enter_string_len: equ $ -enter_string
 
   input_valid_string: db "Entrée valide.", 0xa, 0
   input_valid_string_len: equ $ -input_valid_string
 
+  validate_password_string: db "Le mot de passe est validé.", 0xa, 0
+  validate_password_string_len: equ $ -validate_password_string
 
   error_read_password_string: db "Une erreur s'est produite pendant la lecture du mot de passe.", 0xa, 0
   error_read_password_string_len: equ $ -error_read_password_string
@@ -20,55 +32,97 @@ section .data
   error_letter_string: db "Chaîne de charactère non conforme.", 0xa, 0
   error_letter_string_len: equ $ -error_letter_string
 
+  error_validate_password_string: db "5 tentatives ont échouées.", 0xa, 0
+  error_validate_password_string_len: equ $ -error_validate_password_string
 
-section .text
+  error_bad_password_string: db "Mot de passe invalide", 0xa, 0
+  error_bad_password_string_len: equ $-error_bad_password_string
+
+section .text ; Définition des fonctions et du code
+
+;--------------------------------------------------
+; Définitions des fonctions affichant les messages "normaux"
 
 print_enter_string:
-  mov eax, SYSCALL_WRITE
-  mov ebx, STDOUT
-  mov ecx, enter_string
-  mov edx, enter_string_len
-  int 0x80
+  _enter                           ; Prologue
+  push enter_string_len
+  push enter_string
+  push STDOUT
+  call write
+  leave                            ; Epilogue 
   ret
 
 print_input_valid_string:
-  mov eax, SYSCALL_WRITE
-  mov ebx, STDOUT
-  mov ecx, input_valid_string
-  mov edx, input_valid_string_len
-  int 0x80
+  _enter                           ; Prologue
+  push input_valid_string_len
+  push input_valid_string
+  push STDOUT
+  call write
+  leave                            ; Epilogue 
   ret
 
-; Error messages:
+print_validate_password_string:
+  _enter                           ; Prologue
+  push validate_password_string_len 
+  push validate_password_string
+  push STDOUT
+  call write
+  leave                            ; Epilogue 
+  ret
+
+;--------------------------------------------------
+; Définitions des fonctions affichant les messages d'erreurs
 
 print_error_read_password_string:
-  mov eax, SYSCALL_WRITE
-  mov ebx, STDERR
-  mov ecx, error_read_password_string
-  mov edx, error_read_password_string_len
-  int 0x80
+  _enter                          ; Prologue
+  push error_read_password_string_len
+  push error_read_password_string
+  push STDERR
+  call write  
+  leave                           ; Epilogue
   ret
 
 print_error_short_string:
-  mov eax, SYSCALL_WRITE
-  mov ebx, STDERR
-  mov ecx, error_short_string
-  mov edx, error_short_string_len
-  int 0x80
+  _enter                          ; Prologue
+  push error_short_string_len
+  push error_short_string
+  push STDERR
+  call write
+  leave                           ; Epilogue
   ret
 
 print_error_long_string:
-  mov eax, SYSCALL_WRITE
-  mov ebx, STDERR
-  mov ecx, error_long_string
-  mov edx, error_long_string_len
-  int 0x80
+  _enter                          ; Prologue
+  push error_long_string_len
+  push error_long_string
+  push STDERR
+  call write
+  leave                           ; Epilogue
   ret
 
 print_error_letter_string:
-  mov eax, SYSCALL_WRITE
-  mov ebx, STDERR
-  mov ecx, error_letter_string
-  mov edx, error_letter_string_len
-  int 0x80
+  _enter                          ; Prologue
+  push error_letter_string_len
+  push error_letter_string
+  push STDERR
+  call write
+  leave                           ; Epilogue
+  ret
+
+print_error_validate_password_string:
+  _enter                          ; Prologue
+  push error_validate_password_string_len
+  push error_validate_password_string
+  push STDERR
+  call write
+  leave                           ; Epilogue
+  ret
+
+print_error_bad_password_string:
+  _enter                          ; Prologue
+  push error_bad_password_string_len
+  push error_bad_password_string
+  push STDERR
+  call write
+  leave                           ; Epilogue
   ret
