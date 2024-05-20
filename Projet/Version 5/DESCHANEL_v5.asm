@@ -1,15 +1,23 @@
 ;--------------------------------------------------
-; TODO: add description
+; DESCHANEL_v5.asm
+;
+; Ce programme récupère un hash et un sel depuis un fichier puis prend en
+;   entrée une chaine de caractères comprise entre 18 et 21 caractères
+;   composé uniquement de lettres (minuscules et majusucules).
+; Si la saisie est valide, le programme inverse cette entrée et la transforme en md5
+;   puis vérifie que l'entrée correspond au mot de passe, dans ce cas, le programme quitte,
+;   à l'inverse une nouvelle entrée est demandée (jusqu'à 5 fois)
+;
 ; Auteur: Louis Deschanel
 ;--------------------------------------------------
 
-%include "defined.asm"
-%include "output_message.asm" ;
-%include "error.asm"          ;
-%include "check.asm"
-%include "syscall.asm"
-%include "shadow.asm"
-%include "md5.asm"
+%include "defined.asm"        ; Contient les constantes visant à faciliter la compréhension du code
+%include "output_message.asm" ; Contient les différents messages à afficher et les fonctions associées
+%include "error.asm"          ; Contient les fonctions de gestion des erreurs
+%include "check.asm"          ; Contient les fonctions dédiées à la vérification de l'entrée utilisateur
+%include "syscall.asm"        ; Contient les interfaces des appels systèmes
+%include "shadow.asm"         ; Contient les fonctions permettant de récupérer le mot de passe depuis un fichier
+%include "md5.asm"            ; Contient les fonctions permettant de générer un hash md5 et le convertir en chaine de caractères
 
 ;--------------------------------------------------
 
@@ -17,11 +25,11 @@ section .bss                  ; Définition des variables en lecture et écritur
   input: resb 25              ; Entrée de l'utilisteur: 25 caractères alloués
   input_reverse: resb 22      ; Entrée de l'utilisteur inversée: 22 caractères alloués
   input_len: resd 1           ; Longueur de la chaine entrée par l'utilisateur, sera réutilisé à plusieurs endroits
-  password: resb 33
-  salt: resb 4
-  salted_input: resb 26
-  md5_input_bytes: resb 16
-  md5_input_string: resb 33
+  password: resb 33           ; Hash du mot de passe
+  salt: resb 4                ; Sel du hash
+  salted_input: resb 26       ; Concaténation du sel et de l'entrée de l'utilisateur inversée
+  md5_input_bytes: resb 16    ; Hash de l'entrée utilisateur en bytes
+  md5_input_string: resb 33   ; Hash de l'entrée utilisateur en string
 ;--------------------------------------------------
 
 section .data                 ; Définition des constantes
@@ -31,8 +39,6 @@ section .data                 ; Définition des constantes
 
 section .text                 ; Définition des fonctions et du code
 global _start
-
-extern MD5Init
 
 ;--------------------------------------------------
 ; Fonction exit_no_error
@@ -193,25 +199,36 @@ reverse_input:
   mov BYTE [input_reverse + edx], 0     ; Un NULL byte est ajouté à la fin 
   ret
 
+
+;--------------------------------------------------
+; Fonction concat_salt
+;
+; Input: None
+; Output: None
+;
+; Objectif: Concaténer le sel avec l'entrée de l'utilisateur inversée
+
 concat_salt:
  
-  xor ecx, ecx
+  xor ecx, ecx                              ; ecx est initialisé à 0 pour servir de compteur
 
+  ; Le sel est ajouté au début de la variable
   mov ebx, DWORD [salt]
   mov DWORD [salted_input], ebx
 
+  ; Chaque caractère de l'entrée utilisateur inversée est ajoutée dans la variable
   _concat_salt_loop:
-    cmp ecx, DWORD [input_len]
+    cmp ecx, DWORD [input_len]              ; Si le compteur atteint la taille de l'entrée utilisateur, le boucle est quittée
     jge _concat_salt_end
     
     mov al, BYTE [input_reverse + ecx]
-    mov BYTE [salted_input + ecx + 4], al
+    mov BYTE [salted_input + ecx + 4], al   ; +4 est utilisé pour prendre en compte les 4 octets du sel
 
-    inc ecx
-    jmp _concat_salt_loop
+    inc ecx                                 ; Incrémentation du compteur
+    jmp _concat_salt_loop   
 
   _concat_salt_end:
-    mov BYTE [salted_input + ecx + 4], 0
+    mov BYTE [salted_input + ecx + 4], 0    ; Ajout du NULL byte
     ret
 
 ;--------------------------------------------------
@@ -229,13 +246,12 @@ _start:
   _enter                                    ; Prologue
   
   sub esp, 4
-  mov DWORD [ebp - 4], 0                        ; Le compteur d'essai est initialisé dans la stack avec une valeur de 0
+  mov DWORD [ebp - 4], 0                    ; Le compteur d'essai est initialisé dans la stack avec une valeur de 0
   
-  call parse_shadow_file
-  ; TODO error
+  call parse_shadow_file                    ; Récupération du hash et du sel depuis un fichier
 
   _start_loop:
-    inc DWORD [ebp - 4]                         ; Le compteur d'essai est incrémenté
+    inc DWORD [ebp - 4]                     ; Le compteur d'essai est incrémenté
     
     cmp DWORD [ebp - 4], 6                      
     jge _end_fail_prog                      ; Si le mot de passe n'a pas été entré au bout de 5 tentative, le programme quitte sur une erreur
@@ -248,10 +264,10 @@ _start:
 
     call reverse_input                      ; L'entrée utilisateur est inversée dans une autre chaine de caractère                 
 
-    call concat_salt
-    call get_md5
+    call concat_salt                        ; Le sel est concaténé avec l'entrée utilisateur inversée
+    call get_md5                            ; Le hash md5 est généré
 
-    push md5_input_string                   ; La chaine inversée est passée en paramètre
+    push md5_input_string                   ; Le hash md5 est passée en paramètre
     call compare_password                   ; Si la chaine est valide, la comparaison est effectuée
     cmp eax, 0
     je _end_prog                            ; Si l'entrée utilisateur correspond au mot de passe, le programme quitte sans erreur

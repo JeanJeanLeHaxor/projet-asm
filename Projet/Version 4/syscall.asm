@@ -52,6 +52,9 @@ write:
   leave                   ; Epilogue
   ret
 
+;--------------------------------------------------
+; open(filename, flag, mode)
+
 open:
   _enter                  ; Prologue
 

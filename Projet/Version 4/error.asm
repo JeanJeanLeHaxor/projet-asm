@@ -30,3 +30,7 @@ error_letter:
   mov eax, 0
   leave
   ret
+
+error_open_file:
+  call print_error_open_file_string
+  call exit_error

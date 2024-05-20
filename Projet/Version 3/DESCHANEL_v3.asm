@@ -1,14 +1,21 @@
 ;--------------------------------------------------
-; TODO: add description
+; DESCHANEL_v3.asm
+;
+; Ce programme prend en entrée une chaine de caractères comprise entre
+;   18 et 21 caractères composé uniquement de lettres (minuscules et majusucules).
+; Si la saisie est valide, le programme inverse cette entrée puis vérifie que l'entrée 
+;   correspond au mot de passe, dans ce cas, le programme quitte, 
+;   à l'inverse une nouvelle entrée est demandée (jusqu'à 5 fois)
+;
 ; Auteur: Louis Deschanel
 ;--------------------------------------------------
 
-%include "defined.asm"
-%include "output_message.asm" ;
-%include "error.asm"          ;
-%include "check.asm"
-%include "syscall.asm"
-%include "shadow.asm"
+
+%include "defined.asm"        ; Contient les constantes visant à faciliter la compréhension du code
+%include "output_message.asm" ; Contient les différents messages à afficher et les fonctions associées
+%include "error.asm"          ; Contient les fonctions de gestion des erreurs
+%include "check.asm"          ; Contient les fonctions dédiées à la vérification de l'entrée utilisateur
+%include "syscall.asm"        ; Contient les interfaces des appels systèmes
 
 ;--------------------------------------------------
 
@@ -16,19 +23,16 @@ section .bss                  ; Définition des variables en lecture et écritur
   input: resb 25              ; Entrée de l'utilisteur: 25 caractères alloués
   input_reverse: resb 22      ; Entrée de l'utilisteur inversée: 22 caractères alloués
   input_len: resd 1           ; Longueur de la chaine entrée par l'utilisateur, sera réutilisé à plusieurs endroits
-  password: resb 22
-  salt: resb 4
+
 ;--------------------------------------------------
 
 section .data                 ; Définition des constantes
-  password_file: db "./shadow"
+  password: db "ThisIsAGoodPassword"
 
 ;--------------------------------------------------
 
 section .text                 ; Définition des fonctions et du code
 global _start
-
-extern MD5Init
 
 ;--------------------------------------------------
 ; Fonction exit_no_error
@@ -206,9 +210,6 @@ _start:
   
   sub esp, 4
   mov DWORD [ebp - 4], 0                        ; Le compteur d'essai est initialisé dans la stack avec une valeur de 0
-  
-  call parse_shadow_file
-  ; TODO error
 
   _start_loop:
     inc DWORD [ebp - 4]                         ; Le compteur d'essai est incrémenté

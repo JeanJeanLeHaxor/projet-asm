@@ -1,12 +1,20 @@
 ;--------------------------------------------------
-; TODO: add description
+; DESCHANEL_v2.asm
+;
+; Ce programme prend en entrée une chaine de caractères comprise entre
+;   18 et 21 caractères composé uniquement de lettres (minuscules et majusucules).
+; Si la saisie est valide, le programme vérifie que l'entrée correspond au mot de passe,
+;   dans ce cas, le programme quitte, à l'inverse une nouvelle entrée est demandée (jusqu'à 5 fois)
+;
 ; Auteur: Louis Deschanel
 ;--------------------------------------------------
 
-%include "output_message.asm" ;
-%include "error.asm"          ;
-%include "check.asm"
-%include "syscall.asm"
+%include "defined.asm"        ; Contient les constantes visant à faciliter la compréhension du code
+%include "output_message.asm" ; Contient les différents messages à afficher et les fonctions associées
+%include "error.asm"          ; Contient les fonctions de gestion des erreurs
+%include "check.asm"          ; Contient les fonctions dédiées à la vérification de l'entrée utilisateur
+%include "syscall.asm"        ; Contient les interfaces des appels système
+
 ;--------------------------------------------------
 
 section .bss                  ; Définition des variables en lecture et écriture

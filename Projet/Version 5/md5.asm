@@ -1,3 +1,11 @@
+;--------------------------------------------------
+; md5.asm
+;
+; Ce fichier a été récupéré depuis https://github.com/rwfpl/rewolf-md5/blob/master/nasm/rewolf_md5.inc
+; 
+;
+;--------------------------------------------------
+
 ;----------------------------------------------------------------------------
 ;|                     The MD5 Message-Digest Algorithm                     |
 ;----------------------------------------------------------------------------
@@ -289,24 +297,44 @@ _n3:
 	popad
 	ret	0Ch
 
+;--------------------------------------------------
+; Fonction convert_md5_string
+;
+; Input: None
+; Output: None
+;
+; Objectif: Convertir le hash md5 en chaine de caractère pour permettre une comparaison avec le hash du mot de passe
+;           Chaque octet contient 2 caractères hexadécimaux:
+;             - Le 1er est récupéré en effectuant un décalage des bits vers la droite
+;             - Le 2eme est récupéré en appliquant un ET logique
+;           La lettre correspondante est ensuite récupérée via la constante alphabet
+;           Ex: - a9 >> 4 = a (10) --> alphabet[10] = 'a'
+;               - a3 & 0xf = 3 --> alphabet[3] = '3'
+
 convert_md5_string:
   
-  xor ecx, ecx
-  xor eax, eax
+  xor ecx, ecx                                    ; ecx est initialisé à 0 pour être utilisé comme compteur
+  xor eax, eax                                    ; eax est initialisé à 0 pour être utilisé comme index
 
   _convert_md5_string_loop:
+    
+    ; Si ecx vaut 16, la boucle est quittée
     cmp ecx, 16
     jge _convert_md5_string_end
 
+    ; Les 4 1er bit sont récupérés via un décalage vers le droite
     mov al, BYTE [md5_input_bytes + ecx]
     shr al, 4
 
+    ; Le caractère correspondant est récupéré dans la constante alphabet
     mov dl, BYTE [alphabet + eax]
     mov BYTE [md5_input_string + ecx * 2], dl 
 
+    ; Les 4 derniers bits sont récupérés avec un ET logique
     mov al, BYTE [md5_input_bytes + ecx]
     and al, 0xf
 
+    ; Le caractère correspondant est récupéré dans la constante alphabet
     mov dl, BYTE [alphabet + eax]
     mov BYTE [md5_input_string + ecx * 2 + 1], dl 
 
@@ -314,18 +342,32 @@ convert_md5_string:
     jmp _convert_md5_string_loop
 
   _convert_md5_string_end:
-    mov BYTE[md5_input_string + ecx * 2], 0
+    mov BYTE[md5_input_string + ecx * 2], 0       ; Un NULL byte est ajouté à la fin
     ret
 
-get_md5:
-  mov eax, DWORD [input_len]
-  add eax, 4
+;--------------------------------------------------
+; Fonction get_md5
+;
+; Input: None
+; Output: None
+;
+; Objectif: Convertir l'entrée utilisateur en hash md5 puis convertir ce hash en chaine de caractère 
 
-  push eax
-  push salted_input
-  push md5_input_bytes
-  call _rwf_md5
-  call convert_md5_string
+get_md5:
+  _enter                                  ; Prologue
+  
+  mov eax, DWORD [input_len]              ; La taille de l'entrée utilisateur est récupérée
+  add eax, 4                              ; La valeur est augmentée de 4 pour prendre en compte le sel
+
+  ; Les arguments sont ajoutés sur la stack conformément à la documentation
+  push eax                                ; Taille du bloc à hasher
+  push salted_input                       ; Bloc à hasher
+  push md5_input_bytes                    ; Buffer recevant le hash md5
+  call _rwf_md5                           ; Appel de la fonction de hashage 
+
+  call convert_md5_string                 ; Conversion du hash en chaine de caractère
+
+  leave                                   ; Epilogue
   ret
 
 

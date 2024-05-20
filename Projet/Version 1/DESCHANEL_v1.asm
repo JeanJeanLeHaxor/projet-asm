@@ -1,12 +1,19 @@
 ;--------------------------------------------------
-; TODO: add description
+; DESCHANEL_v1.asm
+;
+; Ce programme prend en entrée une chaine de caractères comprise entre
+;   18 et 21 caractères composé uniquement de lettres (minuscules et majusucules).
+; Si la saisie est valide, le programme quitte, dans le cas contraire, une nouvelle
+;   entrée est demandée
+;
 ; Auteur: Louis Deschanel
 ;--------------------------------------------------
 
-%include "output_message.asm" ;
-%include "error.asm"          ;
-%include "check.asm"
-%include "syscall.asm"
+%include "defined.asm"        ; Contient les constantes visant à faciliter la compréhension du code
+%include "output_message.asm" ; Contient les différents messages à afficher et les fonctions associées
+%include "error.asm"          ; Contient les fonctions de gestion des erreurs
+%include "check.asm"          ; Contient les fonctions dédiées à la vérification de l'entrée utilisateur
+%include "syscall.asm"        ; Contient les interfaces des appels systèmes
 ;--------------------------------------------------
 
 section .bss                  ; Définition des variables en lecture et écriture
@@ -136,5 +143,5 @@ _start:
   jmp _start                    ; Dans le cas contraire, une nouvelle entrée est demandée
 
 _end_prog:
-  call print_input_valid_string
-  call exit_no_error
+  call print_input_valid_string ; Affichage du message d'entrée valide
+  call exit_no_error            ; Exit sans erreur

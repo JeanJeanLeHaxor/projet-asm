@@ -7,8 +7,6 @@
 ; Auteur: Louis Deschanel
 ;--------------------------------------------------
 
-%include "defined.asm"
-
 section .data ; Définition des constantes, chaque string est associée avec sa longueur (Permet d'éviter de calculer la longueur au runtime)
 
   enter_string: db "Entrez le mot de passe: ", 0

@@ -36,6 +36,9 @@ section .data ; Définition des constantes, chaque string est associée avec sa 
   error_bad_password_string: db "Mot de passe invalide", 0xa, 0
   error_bad_password_string_len: equ $-error_bad_password_string
 
+  error_open_file_string: db "Le fichier contenant le mot de passe n'a pas pu être ouvert", 0xa, 0
+  error_open_file_string_len: equ $-error_open_file_string
+
 section .text ; Définition des fonctions et du code
 
 ;--------------------------------------------------
@@ -120,6 +123,15 @@ print_error_bad_password_string:
   _enter                          ; Prologue
   push error_bad_password_string_len
   push error_bad_password_string
+  push STDERR
+  call write
+  leave                           ; Epilogue
+  ret
+
+print_error_open_file_string:
+  _enter                          ; Prologue
+  push error_open_file_string_len
+  push error_open_file_string
   push STDERR
   call write
   leave                           ; Epilogue

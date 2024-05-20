@@ -1,3 +1,11 @@
+;--------------------------------------------------
+; md5.asm
+;
+; Ce fichier a été récupéré depuis https://github.com/rwfpl/rewolf-md5/blob/master/nasm/rewolf_md5.inc
+; 
+;
+;--------------------------------------------------
+
 ;----------------------------------------------------------------------------
 ;|                     The MD5 Message-Digest Algorithm                     |
 ;----------------------------------------------------------------------------
@@ -50,6 +58,9 @@
 ;----------------------------------------------------------------------------
 ;|   Adaptation for NASM/YASM:  Ange Albertini                              |
 ;----------------------------------------------------------------------------
+
+section .data
+  alphabet: db "0123456789abcdef", 0
 
 section .text
 
@@ -286,16 +297,56 @@ _n3:
 	popad
 	ret	0Ch
 
-global _start
+;--------------------------------------------------
+; Fonction convert_md5_string
+;
+; Input: None
+; Output: None
+;
+; Objectif: Convertir le hash md5 en chaine de caractère pour permettre une comparaison avec le hash du mot de passe
+;           Chaque octet contient 2 caractères hexadécimaux:
+;             - Le 1er est récupéré en effectuant un décalage des bits vers la droite
+;             - Le 2eme est récupéré en appliquant un ET logique
+;           La lettre correspondante est ensuite récupérée via la constante alphabet
+;           Ex: a9 = 
 
-_start:
-       push    19                                         
-       push    datablock                                                 
-       push    destHash                                                  
-       call    _rwf_md5
+convert_md5_string:
+  
+  xor ecx, ecx
+  xor eax, eax
 
-section .data
-  datablock: db "ThisIsAGoodPassword"
+  _convert_md5_string_loop:
+    cmp ecx, 16
+    jge _convert_md5_string_end
 
-section .bss
-  destHash: resb 16
+    mov al, BYTE [md5_input_bytes + ecx]
+    shr al, 4
+
+    mov dl, BYTE [alphabet + eax]
+    mov BYTE [md5_input_string + ecx * 2], dl 
+
+    mov al, BYTE [md5_input_bytes + ecx]
+    and al, 0xf
+
+    mov dl, BYTE [alphabet + eax]
+    mov BYTE [md5_input_string + ecx * 2 + 1], dl 
+
+    inc ecx
+    jmp _convert_md5_string_loop
+
+  _convert_md5_string_end:
+    mov BYTE[md5_input_string + ecx * 2], 0
+    ret
+
+get_md5:
+  mov eax, DWORD [input_len]
+  add eax, 4
+
+  push eax
+  push salted_input
+  push md5_input_bytes
+  call _rwf_md5
+  call convert_md5_string
+  ret
+
+
