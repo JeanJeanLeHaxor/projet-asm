@@ -25,9 +25,9 @@
 ;--------------------------------------------------
 ; Définition des arguments
 ; La calling convention 'Right-To-Left' est utilisée pour une meilleur compréhension lors de la lecture du code
-%define ARG_1 DWORD [esp + 8]
-%define ARG_2 DWORD [esp + 12]
-%define ARG_3 DWORD [esp + 16]
+%define ARG_1 DWORD [ebp + 8]
+%define ARG_2 DWORD [ebp + 12]
+%define ARG_3 DWORD [ebp + 16]
 
 
 ;--------------------------------------------------

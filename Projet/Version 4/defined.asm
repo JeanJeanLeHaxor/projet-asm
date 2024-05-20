@@ -21,6 +21,7 @@
 %define SYSCALL_EXIT 1
 %define SYSCALL_READ 3
 %define SYSCALL_WRITE 4
+%define SYSCALL_OPEN 5
 
 ;--------------------------------------------------
 ; Définition des arguments
@@ -29,6 +30,9 @@
 %define ARG_2 DWORD [ebp + 12]
 %define ARG_3 DWORD [ebp + 16]
 
+;--------------------------------------------------
+; Définition des modes d'ouverture de fichier
+%define O_RDONLY 0
 
 ;--------------------------------------------------
 ; Définiton du prologue
